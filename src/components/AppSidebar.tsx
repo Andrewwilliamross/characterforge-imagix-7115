@@ -8,6 +8,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 
@@ -35,10 +36,11 @@ export function AppSidebar() {
       collapsible="icon"
     >
       <SidebarContent className="bg-sidebar-background">
-        <div className="p-6 border-b border-sidebar-border">
+        <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
           <h2 className={`font-bold text-sidebar-foreground ${collapsed ? "text-xs text-center" : "text-xl"}`}>
             {collapsed ? "ML" : "MediaLink"}
           </h2>
+          <SidebarTrigger className="h-6 w-6" />
         </div>
 
         <SidebarGroup className="p-4">

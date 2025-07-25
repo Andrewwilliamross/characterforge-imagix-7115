@@ -9,7 +9,7 @@ import Research from "./pages/Research";
 import Workspace from "./pages/Workspace";
 import AiConsultant from "./pages/AiConsultant";
 import { AppSidebar } from "./components/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,9 +22,15 @@ const App = () => (
           <div className="min-h-screen flex w-full">
             <AppSidebar />
             <div className="flex-1 flex flex-col">
-              <header className="h-12 flex items-center border-b bg-background">
-                <SidebarTrigger className="ml-4" />
-                <h1 className="ml-4 font-semibold text-foreground">MediaLink Dashboard</h1>
+              <header className="h-16 flex items-center border-b bg-background px-6">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src="/lovable-uploads/6900b0fd-bb19-4a5d-a3ba-82984b8c5adf.png" 
+                    alt="MediaLink" 
+                    className="h-8 w-auto"
+                  />
+                  <h1 className="font-semibold text-foreground text-xl">MediaLink</h1>
+                </div>
               </header>
               <main className="flex-1 bg-background">
                 <Routes>

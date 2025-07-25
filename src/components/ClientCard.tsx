@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Textarea } from "./ui/textarea";
 import { Input } from "./ui/input";
 import { Checkbox } from "./ui/checkbox";
-import { Calendar, DollarSign, Target, Users, MessageCircle, Lightbulb, Plus, Upload, ChevronDown, ChevronUp, Edit } from "lucide-react";
+import { Calendar, DollarSign, Target, Users, MessageCircle, Lightbulb, Plus, Upload, ChevronDown, ChevronUp, Edit, X, FileText, Table, Presentation, ExternalLink } from "lucide-react";
 
 interface TeamMember {
   id: string;
@@ -57,6 +57,13 @@ interface Client {
     votes: number;
     avatar?: string;
   }>;
+  documents?: Array<{
+    id: string;
+    name: string;
+    type: string;
+    uploadDate: string;
+  }>;
+  boxUrl?: string;
 }
 
 interface ClientCardProps {
@@ -72,11 +79,16 @@ export const ClientCard = ({ client, teamMembers, onExpand, onInterestSubmit, ex
   const [newComment, setNewComment] = useState("");
   const [newIdea, setNewIdea] = useState("");
   const [newActionItem, setNewActionItem] = useState("");
+  const [newTeamMember, setNewTeamMember] = useState("");
+  const [newBoxUrl, setNewBoxUrl] = useState(client.boxUrl || "");
   const [expandedActionItems, setExpandedActionItems] = useState<Set<string>>(new Set());
+  const [expandedContacts, setExpandedContacts] = useState<Set<string>>(new Set());
   const [editingFields, setEditingFields] = useState<Set<string>>(new Set());
   const [editValues, setEditValues] = useState<any>({});
+  const [globalEditMode, setGlobalEditMode] = useState(false);
 
   const assignedMembers = teamMembers.filter(member => member.isAssigned);
+  const unassignedMembers = teamMembers.filter(member => !member.isAssigned);
   const brandColor = client.brandColor || "#5B4AFF";
 
   const toggleActionItem = (itemId: string) => {
@@ -87,6 +99,16 @@ export const ClientCard = ({ client, teamMembers, onExpand, onInterestSubmit, ex
       newExpanded.add(itemId);
     }
     setExpandedActionItems(newExpanded);
+  };
+
+  const toggleContact = (contactName: string) => {
+    const newExpanded = new Set(expandedContacts);
+    if (newExpanded.has(contactName)) {
+      newExpanded.delete(contactName);
+    } else {
+      newExpanded.add(contactName);
+    }
+    setExpandedContacts(newExpanded);
   };
 
   const startEditing = (field: string, currentValue: any) => {
@@ -168,13 +190,74 @@ export const ClientCard = ({ client, teamMembers, onExpand, onInterestSubmit, ex
     }
   };
 
+  const addTeamMember = () => {
+    if (newTeamMember.trim() && onUpdateClient) {
+      // In a real app, this would add to the team members list
+      console.log(`Adding team member: ${newTeamMember}`);
+      setNewTeamMember("");
+    }
+  };
+
+  const removeTeamMember = (memberId: string) => {
+    // In a real app, this would remove from the team members list
+    console.log(`Removing team member: ${memberId}`);
+  };
+
+  const saveBoxUrl = () => {
+    if (onUpdateClient) {
+      onUpdateClient(client.id, { boxUrl: newBoxUrl });
+    }
+  };
+
+  const uploadDocument = () => {
+    // Mock document upload
+    const mockDoc = {
+      id: Date.now().toString(),
+      name: "Sample Document.pdf",
+      type: "pdf",
+      uploadDate: new Date().toLocaleDateString()
+    };
+    
+    if (onUpdateClient) {
+      onUpdateClient(client.id, {
+        documents: [...(client.documents || []), mockDoc]
+      });
+    }
+  };
+
+  const getDocumentIcon = (type: string) => {
+    if (type.includes('excel') || type.includes('csv') || type.includes('xlsx')) {
+      return <Table className="w-4 h-4 text-green-600" />;
+    }
+    if (type.includes('powerpoint') || type.includes('ppt') || type.includes('presentation')) {
+      return <Presentation className="w-4 h-4 text-orange-600" />;
+    }
+    return <FileText className="w-4 h-4 text-blue-600" />;
+  };
+
+  const getDocumentColor = (type: string) => {
+    if (type.includes('excel') || type.includes('csv') || type.includes('xlsx')) {
+      return 'bg-green-100 border-green-300 text-green-800';
+    }
+    if (type.includes('powerpoint') || type.includes('ppt') || type.includes('presentation')) {
+      return 'bg-orange-100 border-orange-300 text-orange-800';
+    }
+    return 'bg-blue-100 border-blue-300 text-blue-800';
+  };
+
   if (!expanded) {
     return (
-      <Card 
-        className="client-card p-6 cursor-pointer bg-card border-2 transition-all duration-300 hover:scale-105"
+        <Card 
+        className="client-card p-6 cursor-pointer bg-card border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg"
         style={{ 
           borderColor: brandColor,
           boxShadow: `0 4px 20px ${brandColor}20`
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = `0 8px 30px ${brandColor}40`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = `0 4px 20px ${brandColor}20`;
         }}
         onClick={() => onExpand?.(client.id)}
       >
@@ -183,7 +266,7 @@ export const ClientCard = ({ client, teamMembers, onExpand, onInterestSubmit, ex
           
           <div className="flex justify-center">
             <div 
-              className="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-2xl"
+              className="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-2xl p-2"
               style={{ backgroundColor: brandColor }}
             >
               {client.logo ? (
@@ -209,7 +292,8 @@ export const ClientCard = ({ client, teamMembers, onExpand, onInterestSubmit, ex
       <Card className="expanded-card w-full max-w-7xl max-h-[95vh] overflow-hidden bg-card">
         <div className="grid grid-cols-4 h-full">
           {/* Main Content - 3 columns */}
-          <div className="col-span-3 p-8 overflow-auto">
+          <div className="col-span-3 overflow-auto">
+            <div className="p-8">
             {/* Header */}
             <div className="flex justify-between items-start mb-8">
               <div className="flex items-center gap-4">
@@ -228,9 +312,18 @@ export const ClientCard = ({ client, teamMembers, onExpand, onInterestSubmit, ex
                   <p className="text-muted-foreground">Client Lead: {client.clientLead}</p>
                 </div>
               </div>
-              <Button variant="outline" onClick={() => onExpand?.("")}>
-                Close
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setGlobalEditMode(!globalEditMode)}
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+                <Button variant="outline" onClick={() => onExpand?.("")}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Company Profile & Project Scope */}
@@ -238,13 +331,15 @@ export const ClientCard = ({ client, teamMembers, onExpand, onInterestSubmit, ex
               <Card className="bg-muted/30">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <h3 className="text-lg font-semibold">Company Profile</h3>
-                  <Button 
-                    size="sm" 
-                    variant="ghost"
-                    onClick={() => startEditing('companyProfile', client.companyProfile)}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
+                  {globalEditMode && (
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => startEditing('companyProfile', client.companyProfile)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent>
                   {editingFields.has('companyProfile') ? (
@@ -267,13 +362,15 @@ export const ClientCard = ({ client, teamMembers, onExpand, onInterestSubmit, ex
               <Card className="bg-muted/30">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <h3 className="text-lg font-semibold">Project Scope</h3>
-                  <Button 
-                    size="sm" 
-                    variant="ghost"
-                    onClick={() => startEditing('projectScope', client.projectScope)}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
+                  {globalEditMode && (
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => startEditing('projectScope', client.projectScope)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent>
                   {editingFields.has('projectScope') ? (
@@ -302,10 +399,18 @@ export const ClientCard = ({ client, teamMembers, onExpand, onInterestSubmit, ex
               <CardContent>
                 <div className="grid md:grid-cols-2 gap-4">
                   {client.keyContacts.map((contact, index) => (
-                    <Card key={index} className="p-4 hover:shadow-md transition-shadow cursor-pointer bg-background">
+                    <Card 
+                      key={index} 
+                      className="p-4 hover:shadow-md transition-all duration-200 cursor-pointer bg-background hover:scale-105"
+                      onClick={() => toggleContact(contact.name)}
+                    >
                       <h4 className="font-medium">{contact.name}</h4>
                       <p className="text-sm font-medium mb-2" style={{ color: brandColor }}>{contact.title}</p>
-                      <p className="text-sm text-muted-foreground">{contact.bio}</p>
+                      {expandedContacts.has(contact.name) && (
+                        <div className="mt-3 pt-3 border-t">
+                          <p className="text-sm text-muted-foreground">{contact.bio}</p>
+                        </div>
+                      )}
                     </Card>
                   ))}
                 </div>
@@ -368,7 +473,10 @@ export const ClientCard = ({ client, teamMembers, onExpand, onInterestSubmit, ex
               <CardContent>
                 <div className="space-y-3 mb-4">
                   {client.actionItems.map((item) => (
-                    <Card key={item.id} className="p-4 hover:shadow-md transition-shadow bg-background">
+                    <Card 
+                      key={item.id} 
+                      className="p-4 hover:shadow-md transition-all duration-200 bg-background hover:scale-105"
+                    >
                       <div className="flex items-start gap-3">
                         <Checkbox checked={item.completed} />
                         <div className="flex-1">
@@ -389,7 +497,7 @@ export const ClientCard = ({ client, teamMembers, onExpand, onInterestSubmit, ex
                           {expandedActionItems.has(item.id) && (
                             <div className="mt-3 pt-3 border-t space-y-3">
                               <Textarea placeholder="Action item description..." defaultValue={item.description} />
-                              <Button size="sm" variant="outline">
+                              <Button size="sm" variant="outline" onClick={uploadDocument}>
                                 <Upload className="w-4 h-4 mr-2" />
                                 Upload Document
                               </Button>
@@ -504,32 +612,142 @@ export const ClientCard = ({ client, teamMembers, onExpand, onInterestSubmit, ex
                 </CardContent>
               </Card>
             </div>
+            </div>
           </div>
 
           {/* Team Members Sidebar - 1 column */}
-          <div className="col-span-1 border-l bg-muted/20 p-6 overflow-auto">
-            <div className="sticky top-0">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Team Members
-                </h2>
-                <Button size="sm" style={{ backgroundColor: brandColor, color: 'white' }}>
+          <div className="col-span-1 border-l bg-muted/20 overflow-auto">
+            <div className="p-6 space-y-6">
+              {/* Team Members Section */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Team Members
+                  </h2>
+                </div>
+                
+                <div className="space-y-4 mb-4">
+                  {assignedMembers.map((member) => (
+                    <Card key={member.id} className="p-4 text-center hover:shadow-md transition-shadow">
+                      <Avatar className="w-16 h-16 mx-auto mb-3">
+                        <AvatarImage src={member.avatar} />
+                        <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      </Avatar>
+                      <p className="font-medium text-sm">{member.name}</p>
+                      <p className="text-xs text-muted-foreground mb-2">{member.title}</p>
+                      {globalEditMode && (
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => removeTeamMember(member.id)}
+                          className="text-xs"
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+
+                {globalEditMode && (
+                  <div className="space-y-2 mb-4">
+                    <Input
+                      placeholder="Add team member by name..."
+                      value={newTeamMember}
+                      onChange={(e) => setNewTeamMember(e.target.value)}
+                    />
+                    <Button size="sm" onClick={addTeamMember} className="w-full">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Quick Add
+                    </Button>
+                  </div>
+                )}
+
+                <Button 
+                  size="sm" 
+                  className="w-full" 
+                  style={{ backgroundColor: brandColor, color: 'white' }}
+                >
                   Submit Interest
                 </Button>
               </div>
-              
-              <div className="space-y-4">
-                {assignedMembers.map((member) => (
-                  <Card key={member.id} className="p-4 text-center hover:shadow-md transition-shadow">
-                    <Avatar className="w-16 h-16 mx-auto mb-3">
-                      <AvatarImage src={member.avatar} />
-                      <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <p className="font-medium text-sm">{member.name}</p>
-                    <p className="text-xs text-muted-foreground">{member.title}</p>
-                  </Card>
-                ))}
+
+              {/* Documents Section */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Documents</h3>
+                  {client.boxUrl && !editingFields.has('boxUrl') ? (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="border-blue-500 hover:bg-blue-50 hover:shadow-md transition-all duration-200"
+                      style={{ borderColor: '#5B4AFF' }}
+                      onClick={() => window.open(client.boxUrl, '_blank')}
+                    >
+                      <img 
+                        src="/lovable-uploads/bcd77544-5a69-49b3-ae32-9ea78bd94494.png" 
+                        alt="Box" 
+                        className="w-4 h-4 mr-2"
+                      />
+                      <ExternalLink className="w-3 h-3" />
+                    </Button>
+                  ) : (
+                    globalEditMode && (
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => startEditing('boxUrl', client.boxUrl || '')}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )
+                  )}
+                </div>
+
+                {editingFields.has('boxUrl') && (
+                  <div className="space-y-2 mb-4">
+                    <Input
+                      placeholder="Enter Box.com URL..."
+                      value={editValues.boxUrl || newBoxUrl}
+                      onChange={(e) => {
+                        setNewBoxUrl(e.target.value);
+                        setEditValues(prev => ({ ...prev, boxUrl: e.target.value }));
+                      }}
+                    />
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => { saveEdit('boxUrl'); saveBoxUrl(); }}>Save</Button>
+                      <Button size="sm" variant="outline" onClick={() => cancelEdit('boxUrl')}>Cancel</Button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-3 mb-4">
+                  {(client.documents || []).map((doc) => (
+                    <div 
+                      key={doc.id} 
+                      className={`p-3 rounded-lg border flex items-center gap-3 ${getDocumentColor(doc.type)}`}
+                    >
+                      <div className="p-1 bg-white rounded">
+                        {getDocumentIcon(doc.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{doc.name}</p>
+                        <p className="text-xs opacity-75">{doc.uploadDate}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={uploadDocument}
+                  className="w-full"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Document
+                </Button>
               </div>
             </div>
           </div>

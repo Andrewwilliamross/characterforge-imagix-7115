@@ -17,8 +17,8 @@ const mockCurrentClients = [
   {
     id: "1",
     name: "Giphy",
-    logo: "",
-    brandColor: "#FF6B6B",
+    logo: "/lovable-uploads/150464e9-4c24-47dd-b2de-51a2d0b6b6fe.png",
+    brandColor: "#5B4AFF",
     clientLead: "Sarah Johnson",
     teamSize: 4,
     pitchDate: "March 15, 2024",
@@ -89,7 +89,7 @@ const mockCurrentClients = [
   {
     id: "2",
     name: "Netflix",
-    logo: "",
+    logo: "/lovable-uploads/f6bb1d27-a9ae-42f1-9289-359a13eadf86.png",
     brandColor: "#E50914",
     clientLead: "Mike Chen",
     teamSize: 6,
@@ -145,7 +145,7 @@ const mockArchivedClients = [
   {
     id: "3",
     name: "Spotify",
-    logo: "",
+    logo: "/lovable-uploads/cda8035b-e1e2-4613-8372-15b8e6f724d3.png",
     brandColor: "#1DB954",
     clientLead: "Alex Rodriguez",
     teamSize: 5,
@@ -166,7 +166,7 @@ const mockProspectiveClients = [
   {
     id: "4",
     name: "Adobe",
-    logo: "",
+    logo: "/lovable-uploads/720cbbc8-68f0-4fa8-9a58-ece8617aeaa0.png",
     brandColor: "#FF0000",
     clientLead: "TBD",
     teamSize: 0,
