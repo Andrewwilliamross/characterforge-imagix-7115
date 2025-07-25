@@ -18,6 +18,7 @@ const mockCurrentClients = [
     id: "1",
     name: "Giphy",
     logo: "",
+    brandColor: "#FF6B6B",
     clientLead: "Sarah Johnson",
     teamSize: 4,
     pitchDate: "March 15, 2024",
@@ -89,6 +90,7 @@ const mockCurrentClients = [
     id: "2",
     name: "Netflix",
     logo: "",
+    brandColor: "#E50914",
     clientLead: "Mike Chen",
     teamSize: 6,
     pitchDate: "March 22, 2024",
@@ -144,6 +146,7 @@ const mockArchivedClients = [
     id: "3",
     name: "Spotify",
     logo: "",
+    brandColor: "#1DB954",
     clientLead: "Alex Rodriguez",
     teamSize: 5,
     pitchDate: "January 15, 2024",
@@ -164,6 +167,7 @@ const mockProspectiveClients = [
     id: "4",
     name: "Adobe",
     logo: "",
+    brandColor: "#FF0000",
     clientLead: "TBD",
     teamSize: 0,
     pitchDate: "April 5, 2024",
@@ -189,16 +193,15 @@ const Index = () => {
     dateRange: "",
     teamMember: ""
   });
-
-  const allClients = {
+  const [clients, setClients] = useState({
     current: mockCurrentClients,
     archived: mockArchivedClients,
     prospective: mockProspectiveClients
-  };
+  });
 
   const filteredClients = useMemo(() => {
-    const clients = allClients[activeTab as keyof typeof allClients];
-    return clients.filter(client => {
+    const clientList = clients[activeTab as keyof typeof clients];
+    return clientList.filter(client => {
       const matchesSearch = !searchQuery || 
         client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         client.clientLead.toLowerCase().includes(searchQuery.toLowerCase());
@@ -211,7 +214,7 @@ const Index = () => {
 
       return matchesSearch && matchesFilters;
     });
-  }, [activeTab, searchQuery, filters]);
+  }, [activeTab, searchQuery, filters, clients]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -234,6 +237,20 @@ const Index = () => {
     setExpandedClient(clientId);
   };
 
+  const handleUpdateClient = (clientId: string, updates: any) => {
+    setClients(prev => {
+      const newClients = { ...prev };
+      Object.keys(newClients).forEach(tab => {
+        const tabClients = newClients[tab as keyof typeof newClients];
+        const clientIndex = tabClients.findIndex(c => c.id === clientId);
+        if (clientIndex !== -1) {
+          tabClients[clientIndex] = { ...tabClients[clientIndex], ...updates };
+        }
+      });
+      return newClients;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader onCreateNewDeal={handleCreateNewDeal} />
@@ -243,9 +260,9 @@ const Index = () => {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           counts={{
-            current: mockCurrentClients.length,
-            archived: mockArchivedClients.length,
-            prospective: mockProspectiveClients.length
+            current: clients.current.length,
+            archived: clients.archived.length,
+            prospective: clients.prospective.length
           }}
         />
       </div>
@@ -269,6 +286,7 @@ const Index = () => {
               teamMembers={mockTeamMembers}
               onExpand={handleExpand}
               expanded={false}
+              onUpdateClient={handleUpdateClient}
             />
           ))}
         </div>
@@ -286,6 +304,7 @@ const Index = () => {
           teamMembers={mockTeamMembers}
           onExpand={handleExpand}
           expanded={true}
+          onUpdateClient={handleUpdateClient}
         />
       )}
     </div>
