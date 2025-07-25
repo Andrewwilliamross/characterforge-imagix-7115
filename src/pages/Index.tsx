@@ -1,232 +1,293 @@
+import { useState, useMemo } from "react";
+import { DashboardHeader } from "../components/DashboardHeader";
+import { DashboardTabs } from "../components/DashboardTabs";
+import { SearchAndFilter } from "../components/SearchAndFilter";
+import { ClientCard } from "../components/ClientCard";
 
-import { useEffect } from "react";
-import { PromoBar } from "../components/PromoBar";
-import { Sidebar } from "../components/Sidebar";
-import Header from "../components/Header";
-import { CreationCard } from "../components/CreationCard";
-import { QuickStartItem } from "../components/QuickStartItem";
-import { FeaturedAppCard } from "../components/FeaturedAppCard";
-import { ModelCard } from "../components/ModelCard";
-import { Video, Paintbrush, Grid, FileText, ArrowUpRight, ArrowRight, Search } from "lucide-react";
+// Mock data for demo
+const mockTeamMembers = [
+  { id: "1", name: "Sarah Johnson", title: "Account Director", avatar: "", isAssigned: true },
+  { id: "2", name: "Mike Chen", title: "Creative Director", avatar: "", isAssigned: true },
+  { id: "3", name: "Alex Rodriguez", title: "Strategist", avatar: "", isAssigned: true },
+  { id: "4", name: "Jessica Kim", title: "Designer", avatar: "", isAssigned: false },
+  { id: "5", name: "David Park", title: "Data Analyst", avatar: "", isAssigned: false },
+];
+
+const mockCurrentClients = [
+  {
+    id: "1",
+    name: "Giphy",
+    logo: "",
+    clientLead: "Sarah Johnson",
+    teamSize: 4,
+    pitchDate: "March 15, 2024",
+    dateEngaged: "February 1, 2024",
+    budget: "$250,000",
+    goals: [
+      "Increase Social Media Engagement 25%",
+      "10M Impressions Across Paid Socials",
+      "Launch 3 Viral Campaign Series"
+    ],
+    companyProfile: "Giphy is the world's largest library of animated GIFs, serving billions of users worldwide with searchable, shareable content.",
+    projectScope: "Complete social media strategy overhaul including influencer partnerships, content creation, and paid advertising campaigns across TikTok, Instagram, and Twitter.",
+    keyContacts: [
+      {
+        name: "Jennifer Martinez",
+        title: "VP of Marketing",
+        bio: "10+ years experience in digital marketing at tech companies. Previously led growth at Snapchat."
+      },
+      {
+        name: "Tom Wilson",
+        title: "Brand Manager",
+        bio: "Creative professional focused on brand storytelling and community engagement. Former Disney marketing executive."
+      }
+    ],
+    actionItems: [
+      {
+        id: "1",
+        task: "Complete competitive analysis report",
+        assignee: "Mike Chen",
+        completed: false,
+        dueDate: "March 10, 2024"
+      },
+      {
+        id: "2",
+        task: "Finalize influencer shortlist",
+        assignee: "Alex Rodriguez",
+        completed: true,
+        dueDate: "March 5, 2024"
+      }
+    ],
+    comments: [
+      {
+        id: "1",
+        author: "Sarah Johnson",
+        content: "Great progress on the influencer research. The TikTok creators we identified have strong engagement rates.",
+        timestamp: "2 hours ago",
+        avatar: ""
+      },
+      {
+        id: "2",
+        author: "Mike Chen",
+        content: "Client loved the creative concepts. Moving forward with the animated series approach.",
+        timestamp: "1 day ago",
+        avatar: ""
+      }
+    ],
+    bigIdeas: [
+      {
+        id: "1",
+        author: "Alex Rodriguez",
+        content: "What if we create a custom GIF maker tool for users? Could be a major upsell opportunity for Q2.",
+        timestamp: "3 hours ago",
+        votes: 5,
+        avatar: ""
+      }
+    ]
+  },
+  {
+    id: "2",
+    name: "Netflix",
+    logo: "",
+    clientLead: "Mike Chen",
+    teamSize: 6,
+    pitchDate: "March 22, 2024",
+    dateEngaged: "February 10, 2024",
+    budget: "$500,000",
+    goals: [
+      "Drive 15% increase in subscription conversions",
+      "Expand international market penetration",
+      "Launch targeted campaigns for 3 new shows"
+    ],
+    companyProfile: "Global streaming entertainment service with over 230 million paid memberships in more than 190 countries.",
+    projectScope: "Multi-market campaign strategy for Q2 content launches, including data-driven audience segmentation and personalized creative development.",
+    keyContacts: [
+      {
+        name: "Maria Gonzalez",
+        title: "Global Marketing Director",
+        bio: "15 years in entertainment marketing. Led successful campaigns for major film studios before joining Netflix."
+      }
+    ],
+    actionItems: [
+      {
+        id: "3",
+        task: "Market research for European expansion",
+        assignee: "David Park",
+        completed: false,
+        dueDate: "March 18, 2024"
+      }
+    ],
+    comments: [
+      {
+        id: "3",
+        author: "Mike Chen",
+        content: "The data insights team is impressed with our audience segmentation approach.",
+        timestamp: "4 hours ago",
+        avatar: ""
+      }
+    ],
+    bigIdeas: [
+      {
+        id: "2",
+        author: "Jessica Kim",
+        content: "Interactive trailer experiences using AR technology - could revolutionize how people discover content.",
+        timestamp: "1 day ago",
+        votes: 8,
+        avatar: ""
+      }
+    ]
+  }
+];
+
+const mockArchivedClients = [
+  {
+    id: "3",
+    name: "Spotify",
+    logo: "",
+    clientLead: "Alex Rodriguez",
+    teamSize: 5,
+    pitchDate: "January 15, 2024",
+    dateEngaged: "December 1, 2023",
+    budget: "$300,000",
+    goals: ["Increase podcast engagement 30%"],
+    companyProfile: "Leading music streaming platform with podcast expansion focus.",
+    projectScope: "Podcast discovery and engagement campaign across major markets.",
+    keyContacts: [],
+    actionItems: [],
+    comments: [],
+    bigIdeas: []
+  }
+];
+
+const mockProspectiveClients = [
+  {
+    id: "4",
+    name: "Adobe",
+    logo: "",
+    clientLead: "TBD",
+    teamSize: 0,
+    pitchDate: "April 5, 2024",
+    dateEngaged: "",
+    budget: "TBD",
+    goals: ["Creative Cloud marketing refresh"],
+    companyProfile: "Leading creative software company targeting creators and professionals.",
+    projectScope: "Brand positioning and digital strategy for Creative Cloud suite.",
+    keyContacts: [],
+    actionItems: [],
+    comments: [],
+    bigIdeas: []
+  }
+];
 
 const Index = () => {
-  // Add a handler to add the logo.svg file if it's missing
-  useEffect(() => {
-    // Check if the logo exists, if not create a simple one
-    const checkLogo = async () => {
-      try {
-        const response = await fetch('/logo.svg');
-        if (response.status === 404) {
-          console.log('Logo not found, would create one in a real app');
-        }
-      } catch (error) {
-        console.log('Error checking logo:', error);
-      }
-    };
-    
-    checkLogo();
-  }, []);
+  const [activeTab, setActiveTab] = useState("current");
+  const [expandedClient, setExpandedClient] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState({
+    industry: "",
+    budgetRange: "",
+    dateRange: "",
+    teamMember: ""
+  });
+
+  const allClients = {
+    current: mockCurrentClients,
+    archived: mockArchivedClients,
+    prospective: mockProspectiveClients
+  };
+
+  const filteredClients = useMemo(() => {
+    const clients = allClients[activeTab as keyof typeof allClients];
+    return clients.filter(client => {
+      const matchesSearch = !searchQuery || 
+        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        client.clientLead.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesFilters = Object.entries(filters).every(([key, value]) => {
+        if (!value) return true;
+        // Add filter logic based on your needs
+        return true;
+      });
+
+      return matchesSearch && matchesFilters;
+    });
+  }, [activeTab, searchQuery, filters]);
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      industry: "",
+      budgetRange: "",
+      dateRange: "",
+      teamMember: ""
+    });
+  };
+
+  const handleCreateNewDeal = () => {
+    console.log("Create new deal clicked");
+  };
+
+  const handleExpand = (clientId: string) => {
+    setExpandedClient(clientId);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <PromoBar />
-      <div className="flex flex-1">
-        <Sidebar />
-        <div className="flex-1 flex flex-col">
-          <Header />
-          <div className="flex-1 overflow-auto">
-            <main className="py-8 px-12">
-              <h1 className="text-3xl font-bold text-white mb-8">
-                What would you like to create?
-              </h1>
-              
-              <div className="grid grid-cols-2 gap-6 mb-12">
-                <CreationCard type="image" />
-                <CreationCard type="storytelling" />
-              </div>
-              
-              <section className="mb-12">
-                <h2 className="text-2xl font-bold text-white mb-6">
-                  Quick starts
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="bg-[#1A1A1A] rounded-lg p-4 flex items-start">
-                    <div className="p-3 rounded-lg bg-[#3A3600] mr-4 flex items-center justify-center">
-                      <Video size={24} className="text-[#FFD426]" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-white">Image to Video</h3>
-                        <span className="bg-green-600 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
-                          New
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-400 mt-1">Bring your image to life</p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-[#1A1A1A] rounded-lg p-4 flex items-start">
-                    <div className="p-3 rounded-lg bg-[#00361F] mr-4 flex items-center justify-center">
-                      <Paintbrush size={24} className="text-[#00A67E]" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-white">Choose a Style</h3>
-                      <p className="text-sm text-gray-400 mt-1">Start with a style you like</p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-[#1A1A1A] rounded-lg p-4 flex items-start">
-                    <div className="p-3 rounded-lg bg-[#360036] mr-4 flex items-center justify-center">
-                      <Grid size={24} className="text-[#FF3EA5]" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-white">Explore Models</h3>
-                      <p className="text-sm text-gray-400 mt-1">See 100+ Fine-tuned models</p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-[#1A1A1A] rounded-lg p-4 flex items-start">
-                    <div className="p-3 rounded-lg bg-[#36003B] mr-4 flex items-center justify-center">
-                      <FileText size={24} className="text-[#FF3EA5]" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-white">Train Model</h3>
-                      <p className="text-sm text-gray-400 mt-1">Customize your creativity</p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-[#1A1A1A] rounded-lg p-4 flex items-start">
-                    <div className="p-3 rounded-lg bg-[#3A3600] mr-4 flex items-center justify-center">
-                      <Search size={24} className="text-[#FFD426]" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-white">Ultimate Upscale</h3>
-                      <p className="text-sm text-gray-400 mt-1">Upscale your images</p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-[#1A1A1A] rounded-lg p-4 flex items-start">
-                    <div className="p-3 rounded-lg bg-[#003619] mr-4 flex items-center justify-center">
-                      <FileText size={24} className="text-[#00A67E]" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-white">Image to Prompt</h3>
-                      <p className="text-sm text-gray-400 mt-1">Convert image to text prompt</p>
-                    </div>
-                  </div>
-                </div>
-              </section>
-              
-              <section className="mb-12">
-                <h2 className="text-2xl font-bold text-white mb-6">
-                  Featured Apps
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <FeaturedAppCard 
-                    title="Image to Video"
-                    subtitle="By OpenArt"
-                    imageSrc="/lovable-uploads/12cd0679-f352-498e-a6ad-9faaa1ffbec9.png"
-                    isNew
-                  />
-                  <FeaturedAppCard 
-                    title="Ultimate Upscale"
-                    subtitle="By OpenArt"
-                    imageSrc="/lovable-uploads/d16f3783-6af1-4327-8936-c5a50eb0cab5.png"
-                  />
-                  <FeaturedAppCard 
-                    title="AI Filters"
-                    subtitle="By OpenArt"
-                    imageSrc="/lovable-uploads/142dea30-a410-4e79-84d0-70189e8fcd07.png"
-                  />
-                  <FeaturedAppCard 
-                    title="Sketch to image"
-                    subtitle="By OpenArt"
-                    imageSrc="/lovable-uploads/b67f802d-430a-4e5a-8755-b61e10470d58.png"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-                  <FeaturedAppCard 
-                    title="Blend Board"
-                    subtitle="By OpenArt"
-                    imageSrc="/lovable-uploads/4255fa40-8036-4424-a210-e3bcd99754df.png"
-                  />
-                  <FeaturedAppCard 
-                    title="Change Facial Expression"
-                    subtitle="By OpenArt"
-                    imageSrc="/lovable-uploads/0c6db754-b805-46e5-a4b8-319a9d8fef71.png"
-                  />
-                  <FeaturedAppCard 
-                    title="Expand"
-                    subtitle="By OpenArt"
-                    imageSrc="/lovable-uploads/8827d443-a68b-4bd9-998f-3c4c410510e9.png"
-                  />
-                  <FeaturedAppCard 
-                    title="Remove background"
-                    subtitle="By OpenArt"
-                    imageSrc="/lovable-uploads/b89881e6-12b4-4527-9c22-1052b8116ca9.png"
-                  />
-                </div>
-                
-                <div className="flex justify-center mt-8">
-                  <button className="border border-gray-700 hover:bg-gray-800 transition-colors text-white flex items-center gap-2 rounded-md px-6 py-2 text-sm font-medium">
-                    View All Flow Apps
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
-              </section>
-              
-              <section className="mb-12">
-                <h2 className="text-2xl font-bold text-white mb-6">
-                  Start from a model
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <ModelCard 
-                    title="Train your own model"
-                    subtitle="Customize your creativity"
-                    imageSrc=""
-                    isTrainYourOwn={true}
-                  />
-                  <ModelCard 
-                    title="OpenArt SDXL"
-                    subtitle="OpenArt"
-                    imageSrc="/lovable-uploads/22f4141e-f83e-4b85-8c93-672e181d999b.png"
-                    tags={[
-                      { label: 'SDXL', variant: 'blue' },
-                      { label: 'Standard', variant: 'green' }
-                    ]}
-                  />
-                  <ModelCard 
-                    title="Flux (dev)"
-                    subtitle="Flux_dev"
-                    imageSrc="/lovable-uploads/e9db2be9-f0a3-4506-b387-ce20bea67ba9.png"
-                    tags={[
-                      { label: 'Flux', variant: 'orange' },
-                      { label: 'Standard', variant: 'green' }
-                    ]}
-                  />
-                  <ModelCard 
-                    title="Flux Realism"
-                    subtitle="Flux_Realism"
-                    imageSrc="/lovable-uploads/e565a3ea-dc96-4344-a533-62026d4245e1.png"
-                    tags={[
-                      { label: 'Flux', variant: 'orange' },
-                      { label: 'Photorealistic', variant: 'yellow' }
-                    ]}
-                  />
-                </div>
-                
-                <div className="flex justify-center mt-8">
-                  <button className="border border-gray-700 hover:bg-gray-800 transition-colors text-white flex items-center gap-2 rounded-md px-6 py-2 text-sm font-medium">
-                    View All Models
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
-              </section>
-            </main>
-          </div>
-        </div>
+    <div className="min-h-screen bg-background">
+      <DashboardHeader onCreateNewDeal={handleCreateNewDeal} />
+      
+      <div className="border-b border-border">
+        <DashboardTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          counts={{
+            current: mockCurrentClients.length,
+            archived: mockArchivedClients.length,
+            prospective: mockProspectiveClients.length
+          }}
+        />
       </div>
+
+      <div className="p-8">
+        <div className="mb-8">
+          <SearchAndFilter
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredClients.map((client) => (
+            <ClientCard
+              key={client.id}
+              client={client}
+              teamMembers={mockTeamMembers}
+              onExpand={handleExpand}
+              expanded={false}
+            />
+          ))}
+        </div>
+
+        {filteredClients.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No clients found matching your criteria.</p>
+          </div>
+        )}
+      </div>
+
+      {expandedClient && (
+        <ClientCard
+          client={filteredClients.find(c => c.id === expandedClient)!}
+          teamMembers={mockTeamMembers}
+          onExpand={handleExpand}
+          expanded={true}
+        />
+      )}
     </div>
   );
 };
